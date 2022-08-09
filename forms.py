@@ -3,79 +3,6 @@ from flask_wtf import Form
 from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField, BooleanField
 from wtforms.validators import DataRequired, AnyOf, URL
 
-valid_genres = ['Alternative',
-                'Blues',
-                'Classical',
-                'Country',
-                'Electronic',
-                'Folk',
-                'Funk',
-                'Hip-Hop',
-                'Heavy Metal',
-                'Instrumental',
-                'Jazz',
-                'Musical Theatre',
-                'Pop',
-                'Punk',
-                'R&B',
-                'Reggae',
-                'Rock n Roll',
-                'Soul',
-                'Other']
-
-valid_states = ['AL',
-                'AK',
-                'AZ',
-                'AR',
-                'CA',
-                'CO',
-                'CT',
-                'DE',
-                'DC',
-                'FL',
-                'GA',
-                'HI',
-                'ID',
-                'IL',
-                'IN',
-                'IA',
-                'KS',
-                'KY',
-                'LA',
-                'ME',
-                'MT',
-                'NE',
-                'NV',
-                'NH',
-                'NJ',
-                'NM',
-                'NY',
-                'NC',
-                'ND',
-                'OH',
-                'OK',
-                'OR',
-                'MD',
-                'MA',
-                'MI',
-                'MN',
-                'MS',
-                'MO',
-                'PA',
-                'RI',
-                'SC',
-                'SD',
-                'TN',
-                'TX',
-                'UT',
-                'VT',
-                'VA',
-                'WA',
-                'WV',
-                'WI',
-                'WY'
-                ]
-
 
 class ShowForm(Form):
     artist_id = StringField(
@@ -99,7 +26,7 @@ class VenueForm(Form):
         'city', validators=[DataRequired()]
     )
     state = SelectField(
-        'state', validators=[DataRequired(), AnyOf(valid_states, 'A valid state must be provided!')],
+        'state', validators=[DataRequired()],
         choices=[
             ('AL', 'AL'),
             ('AK', 'AK'),
@@ -164,7 +91,7 @@ class VenueForm(Form):
         'image_link'
     )
     genres = SelectMultipleField(
-        'genres', validators=[DataRequired(), AnyOf(valid_genres, 'A valid genre must be selected!')],
+        'genres', validators=[DataRequired()],
         choices=[
             ('Alternative', 'Alternative'),
             ('Blues', 'Blues'),
@@ -209,7 +136,7 @@ class ArtistForm(Form):
         'city', validators=[DataRequired()]
     )
     state = SelectField(
-        'state', validators=[DataRequired(), AnyOf(valid_states, 'A valid state must be provided!')],
+        'state', validators=[DataRequired()],
         choices=[
             ('AL', 'AL'),
             ('AK', 'AK'),
@@ -271,7 +198,7 @@ class ArtistForm(Form):
         'image_link'
     )
     genres = SelectMultipleField(
-        'genres', validators=[DataRequired(), AnyOf(valid_genres, 'A valid genre must be selected!')],
+        'genres', validators=[DataRequired()],
         choices=[
             ('Alternative', 'Alternative'),
             ('Blues', 'Blues'),

@@ -1,11 +1,12 @@
 # ----------------------------------------------------------------------------#
 # Imports
 # ----------------------------------------------------------------------------#
+import sys
 
 import json
 import dateutil.parser
 import babel
-from flask import Flask, render_template, request, Response, flash, redirect, url_for
+from flask import Flask, render_template, request, Response, flash, redirect, url_for, abort
 from flask_migrate import Migrate
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
@@ -195,7 +196,7 @@ def create_venue_form():
 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
-    form = VenueForm()
+    form = VenueForm(request.form)
     error = False
     if form.validate():
         venue = Venue(
@@ -212,10 +213,9 @@ def create_venue_submission():
             seeking_description=form.seeking_description.data
         )
         try:
-
             db.session.add(venue)
             db.session.commit()
-        except:
+        except Exception as err:
             error = True
             db.session.rollback()
         finally:
@@ -224,6 +224,8 @@ def create_venue_submission():
             flash('An error occurred. Venue ' + venue.name + ' could not be listed.')
         else:
             flash('Venue ' + request.form['name'] + ' was successfully listed!')
+    else:
+        flash(form.errors)
     return render_template('pages/home.html')
 
 
