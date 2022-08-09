@@ -3,6 +3,80 @@ from flask_wtf import Form
 from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField, BooleanField
 from wtforms.validators import DataRequired, AnyOf, URL
 
+valid_genres = ['Alternative',
+                'Blues',
+                'Classical',
+                'Country',
+                'Electronic',
+                'Folk',
+                'Funk',
+                'Hip-Hop',
+                'Heavy Metal',
+                'Instrumental',
+                'Jazz',
+                'Musical Theatre',
+                'Pop',
+                'Punk',
+                'R&B',
+                'Reggae',
+                'Rock n Roll',
+                'Soul',
+                'Other']
+
+valid_states = ['AL',
+                'AK',
+                'AZ',
+                'AR',
+                'CA',
+                'CO',
+                'CT',
+                'DE',
+                'DC',
+                'FL',
+                'GA',
+                'HI',
+                'ID',
+                'IL',
+                'IN',
+                'IA',
+                'KS',
+                'KY',
+                'LA',
+                'ME',
+                'MT',
+                'NE',
+                'NV',
+                'NH',
+                'NJ',
+                'NM',
+                'NY',
+                'NC',
+                'ND',
+                'OH',
+                'OK',
+                'OR',
+                'MD',
+                'MA',
+                'MI',
+                'MN',
+                'MS',
+                'MO',
+                'PA',
+                'RI',
+                'SC',
+                'SD',
+                'TN',
+                'TX',
+                'UT',
+                'VT',
+                'VA',
+                'WA',
+                'WV',
+                'WI',
+                'WY'
+                ]
+
+
 class ShowForm(Form):
     artist_id = StringField(
         'artist_id'
@@ -13,8 +87,9 @@ class ShowForm(Form):
     start_time = DateTimeField(
         'start_time',
         validators=[DataRequired()],
-        default= datetime.today()
+        default=datetime.today()
     )
+
 
 class VenueForm(Form):
     name = StringField(
@@ -24,7 +99,7 @@ class VenueForm(Form):
         'city', validators=[DataRequired()]
     )
     state = SelectField(
-        'state', validators=[DataRequired()],
+        'state', validators=[DataRequired(), AnyOf(valid_states, 'A valid state must be provided!')],
         choices=[
             ('AL', 'AL'),
             ('AK', 'AK'),
@@ -89,8 +164,7 @@ class VenueForm(Form):
         'image_link'
     )
     genres = SelectMultipleField(
-        # TODO implement enum restriction
-        'genres', validators=[DataRequired()],
+        'genres', validators=[DataRequired(), AnyOf(valid_genres, 'A valid genre must be selected!')],
         choices=[
             ('Alternative', 'Alternative'),
             ('Blues', 'Blues'),
@@ -120,12 +194,11 @@ class VenueForm(Form):
         'website_link'
     )
 
-    seeking_talent = BooleanField( 'seeking_talent' )
+    seeking_talent = BooleanField('seeking_talent')
 
     seeking_description = StringField(
         'seeking_description'
     )
-
 
 
 class ArtistForm(Form):
@@ -136,7 +209,7 @@ class ArtistForm(Form):
         'city', validators=[DataRequired()]
     )
     state = SelectField(
-        'state', validators=[DataRequired()],
+        'state', validators=[DataRequired(), AnyOf(valid_states, 'A valid state must be provided!')],
         choices=[
             ('AL', 'AL'),
             ('AK', 'AK'),
@@ -192,14 +265,13 @@ class ArtistForm(Form):
         ]
     )
     phone = StringField(
-        # TODO implement validation logic for state
         'phone'
     )
     image_link = StringField(
         'image_link'
     )
     genres = SelectMultipleField(
-        'genres', validators=[DataRequired()],
+        'genres', validators=[DataRequired(), AnyOf(valid_genres, 'A valid genre must be selected!')],
         choices=[
             ('Alternative', 'Alternative'),
             ('Blues', 'Blues'),
@@ -221,19 +293,17 @@ class ArtistForm(Form):
             ('Soul', 'Soul'),
             ('Other', 'Other'),
         ]
-     )
+    )
     facebook_link = StringField(
-        # TODO implement enum restriction
         'facebook_link', validators=[URL()]
-     )
+    )
 
     website_link = StringField(
         'website_link'
-     )
+    )
 
-    seeking_venue = BooleanField( 'seeking_venue' )
+    seeking_venue = BooleanField('seeking_venue')
 
     seeking_description = StringField(
-            'seeking_description'
-     )
-
+        'seeking_description'
+    )
