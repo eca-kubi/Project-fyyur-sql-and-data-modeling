@@ -22,9 +22,11 @@ from forms import *
 app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
-db = SQLAlchemy(app)
+db = SQLAlchemy(app, session_options={
+    'expire_on_commit': False
+})
 
-from models import Venue,Show,Artist
+from models import Venue, Show, Artist
 
 
 # ----------------------------------------------------------------------------#
@@ -509,14 +511,34 @@ def create_shows():
 
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
-    # called to create new shows in the db, upon submitting new show listing form
-    # TODO: insert form data as a new Show record in the db, instead
-
-    # on successful db insert, flash success
-    flash('Show was successfully listed!')
-    # TODO: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Show could not be listed.')
-    # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+    form = ShowForm(request.form)
+    error = False
+    if form.validate():
+        artist = db.session.query(Artist).filter_by(id=form.artist_id.data).first()
+        venue = db.session.query(Venue).filter_by(id=form.venue_id.data).first()
+        if artist is None:
+            flash('Unknown artist with id ' + form.artist_id.data)
+        if venue is None:
+            flash('Unknown venue with id ' + form.venue_id.data)
+        show = Show(
+            artist_id=form.artist_id.data,
+            venue_id=form.venue_id.data,
+            start_time=form.start_time.data
+        )
+        try:
+            db.session.add(show)
+            db.session.commit()
+        except Exception as err:
+            error = True
+            db.session.rollback()
+        finally:
+            db.session.close()
+        if error:
+            flash('Show could not be listed!')
+        else:
+            flash('Show for ' + artist.name + ' was successfully listed!')
+    else:
+        flash(form.errors)
     return render_template('pages/home.html')
 
 
