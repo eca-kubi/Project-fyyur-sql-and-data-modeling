@@ -10,7 +10,6 @@ import logging
 from flask import Flask, render_template, request, flash, redirect, url_for
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
-
 from forms import *
 
 # ----------------------------------------------------------------------------#
@@ -252,13 +251,18 @@ def search_artists():
     # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
     # seach for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
     # search for "band" should return "The Wild Sax Band".
+    search_term = request.form['search_term']
+    data = db.session.execute("""
+         SELECT  "Artist".id, "Artist".name, COUNT("Show".artist_id) as num_upcoming_shows
+         FROM "Artist" 
+         LEFT OUTER JOIN "Show" ON "Artist".id = "Show".artist_id 
+         WHERE "Artist".name ILIKE :val
+         GROUP BY "Artist".id
+
+        """, {'val': '%' + search_term + '%'}).mappings().all()
     response = {
-        "count": 1,
-        "data": [{
-            "id": 4,
-            "name": "Guns N Petals",
-            "num_upcoming_shows": 0,
-        }]
+        "count": len(data),
+        "data": data
     }
     return render_template('pages/search_artists.html', results=response,
                            search_term=request.form.get('search_term', ''))
