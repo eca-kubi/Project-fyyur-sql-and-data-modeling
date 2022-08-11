@@ -320,7 +320,6 @@ def show_artist(artist_id):
         abort(500)
     finally:
         db.session.close()
-    # data = list(filter(lambda d: d['id'] == artist_id, [data1]))[0]
     return render_template('pages/show_artist.html', artist=artist)
 
 
@@ -328,21 +327,17 @@ def show_artist(artist_id):
 #  ----------------------------------------------------------------
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
+    artist = Artist.query.filter_by(id=artist_id).first()
     form = ArtistForm()
-    artist = {
-        "id": 4,
-        "name": "Guns N Petals",
-        "genres": ["Rock n Roll"],
-        "city": "San Francisco",
-        "state": "CA",
-        "phone": "326-123-5000",
-        "website": "https://www.gunsnpetalsband.com",
-        "facebook_link": "https://www.facebook.com/GunsNPetals",
-        "seeking_venue": True,
-        "seeking_description": "Looking for shows to perform at in the San Francisco Bay Area!",
-        "image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80"
-    }
-    # TODO: populate form with fields from artist with ID <artist_id>
+    form.name.data = artist.name
+    form.genres.data = to_genres_list(artist.genres)
+    form.state.data = artist.state
+    form.city.data = artist.city
+    form.facebook_link.data = artist.facebook_link
+    form.website_link.data = artist.website_link
+    form.image_link.data = artist.image_link
+    form.seeking_venue.data = artist.seeking_venue
+    form.seeking_description.data = artist.seeking_description
     return render_template('forms/edit_artist.html', form=form, artist=artist)
 
 
