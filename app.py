@@ -7,9 +7,11 @@ from logging import Formatter, FileHandler
 import babel
 import dateutil.parser
 import logging
-from flask import Flask, render_template, request, flash, redirect, url_for
+from flask import Flask, render_template, request, flash, redirect, url_for, abort
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
+
 from forms import *
 
 # ----------------------------------------------------------------------------#
@@ -31,7 +33,11 @@ from models import Venue, Show, Artist
 # ----------------------------------------------------------------------------#
 
 def format_datetime(value, format='medium'):
-    date = dateutil.parser.parse(value)
+    if isinstance(value, datetime):
+        date = value
+    else:
+        date = dateutil.parser.parse(value)
+
     if format == 'full':
         format = "EEEE MMMM, d, y 'at' h:mma"
     elif format == 'medium':
@@ -40,6 +46,14 @@ def format_datetime(value, format='medium'):
 
 
 app.jinja_env.filters['datetime'] = format_datetime
+
+
+# ----------------------------------------------------------------------------#
+# Helper functions.
+# ----------------------------------------------------------------------------#
+# Transform comma-delimited string of genres to list
+def to_genres_list(genres):
+    return genres.split(",")
 
 
 # ----------------------------------------------------------------------------#
@@ -248,103 +262,66 @@ def artists():
 
 @app.route('/artists/search', methods=['POST'])
 def search_artists():
-    # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
-    # seach for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
-    # search for "band" should return "The Wild Sax Band".
     search_term = request.form['search_term']
-    data = db.session.execute("""
-         SELECT  "Artist".id, "Artist".name, COUNT("Show".artist_id) as num_upcoming_shows
-         FROM "Artist" 
-         LEFT OUTER JOIN "Show" ON "Artist".id = "Show".artist_id 
-         WHERE "Artist".name ILIKE :val
-         GROUP BY "Artist".id
-
-        """, {'val': '%' + search_term + '%'}).mappings().all()
-    response = {
-        "count": len(data),
-        "data": data
-    }
+    error = False
+    response = {}
+    try:
+        # search for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
+        # search for "band" should return "The Wild Sax Band".
+        data = db.session.execute("""
+             SELECT  "Artist".id, "Artist".name, COUNT("Show".artist_id) as num_upcoming_shows
+             FROM "Artist" 
+             LEFT OUTER JOIN "Show" ON "Artist".id = "Show".artist_id 
+             WHERE "Artist".name ILIKE :val
+             GROUP BY "Artist".id
+    
+            """, {'val': '%' + search_term + '%'}).mappings().all()
+        response = {
+            "count": len(data),
+            "data": data
+        }
+    except Exception as err:
+        error = True
+    finally:
+        db.session.close()
+        if error:
+            flash('An error occurred!')
+            abort(500)
     return render_template('pages/search_artists.html', results=response,
                            search_term=request.form.get('search_term', ''))
 
 
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
-    # shows the artist page with the given artist_id
-    # TODO: replace with real artist data from the artist table, using artist_id
-    data1 = {
-        "id": 4,
-        "name": "Guns N Petals",
-        "genres": ["Rock n Roll"],
-        "city": "San Francisco",
-        "state": "CA",
-        "phone": "326-123-5000",
-        "website": "https://www.gunsnpetalsband.com",
-        "facebook_link": "https://www.facebook.com/GunsNPetals",
-        "seeking_venue": True,
-        "seeking_description": "Looking for shows to perform at in the San Francisco Bay Area!",
-        "image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80",
-        "past_shows": [{
-            "venue_id": 1,
-            "venue_name": "The Musical Hop",
-            "venue_image_link": "https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60",
-            "start_time": "2019-05-21T21:30:00.000Z"
-        }],
-        "upcoming_shows": [],
-        "past_shows_count": 1,
-        "upcoming_shows_count": 0,
-    }
-    data2 = {
-        "id": 5,
-        "name": "Matt Quevedo",
-        "genres": ["Jazz"],
-        "city": "New York",
-        "state": "NY",
-        "phone": "300-400-5000",
-        "facebook_link": "https://www.facebook.com/mattquevedo923251523",
-        "seeking_venue": False,
-        "image_link": "https://images.unsplash.com/photo-1495223153807-b916f75de8c5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=334&q=80",
-        "past_shows": [{
-            "venue_id": 3,
-            "venue_name": "Park Square Live Music & Coffee",
-            "venue_image_link": "https://images.unsplash.com/photo-1485686531765-ba63b07845a7?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=747&q=80",
-            "start_time": "2019-06-15T23:00:00.000Z"
-        }],
-        "upcoming_shows": [],
-        "past_shows_count": 1,
-        "upcoming_shows_count": 0,
-    }
-    data3 = {
-        "id": 6,
-        "name": "The Wild Sax Band",
-        "genres": ["Jazz", "Classical"],
-        "city": "San Francisco",
-        "state": "CA",
-        "phone": "432-325-5432",
-        "seeking_venue": False,
-        "image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-        "past_shows": [],
-        "upcoming_shows": [{
-            "venue_id": 3,
-            "venue_name": "Park Square Live Music & Coffee",
-            "venue_image_link": "https://images.unsplash.com/photo-1485686531765-ba63b07845a7?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=747&q=80",
-            "start_time": "2035-04-01T20:00:00.000Z"
-        }, {
-            "venue_id": 3,
-            "venue_name": "Park Square Live Music & Coffee",
-            "venue_image_link": "https://images.unsplash.com/photo-1485686531765-ba63b07845a7?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=747&q=80",
-            "start_time": "2035-04-08T20:00:00.000Z"
-        }, {
-            "venue_id": 3,
-            "venue_name": "Park Square Live Music & Coffee",
-            "venue_image_link": "https://images.unsplash.com/photo-1485686531765-ba63b07845a7?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=747&q=80",
-            "start_time": "2035-04-15T20:00:00.000Z"
-        }],
-        "past_shows_count": 0,
-        "upcoming_shows_count": 3,
-    }
-    data = list(filter(lambda d: d['id'] == artist_id, [data1, data2, data3]))[0]
-    return render_template('pages/show_artist.html', artist=data)
+    error = False
+    artist = []
+    try:
+        # shows the artist page with the given artist_id
+        artist = Artist.query.filter_by(id=artist_id).one()
+        artist.genres = to_genres_list(artist.genres)
+
+        past_shows = db.session.query(Show.start_time, Show.artist_id, Show.id, Show.venue_id, Venue.id, Venue.name,
+                                      Venue.image_link) \
+            .filter(Show.artist_id == artist_id, Show.start_time < func.now()) \
+            .join(Venue, Artist)
+
+        upcoming_shows = db.session.query(Show.start_time, Show.artist_id, Show.id, Show.venue_id, Venue.id, Venue.name,
+                                          Venue.image_link) \
+            .filter(Show.artist_id == artist_id, Show.start_time > func.now()) \
+            .join(Venue, Artist)
+
+        artist.past_shows = past_shows.all()
+        artist.upcoming_shows = upcoming_shows.all()
+        artist.upcoming_shows_count = upcoming_shows.count()
+        artist.past_shows_count = past_shows.count()
+    except Exception as err:
+        error = True
+        flash('An error occurred!')
+        abort(500)
+    finally:
+        db.session.close()
+    # data = list(filter(lambda d: d['id'] == artist_id, [data1]))[0]
+    return render_template('pages/show_artist.html', artist=artist)
 
 
 #  Update
