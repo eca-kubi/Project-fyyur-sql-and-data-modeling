@@ -327,17 +327,23 @@ def show_artist(artist_id):
 #  ----------------------------------------------------------------
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
-    artist = Artist.query.filter_by(id=artist_id).first()
     form = ArtistForm()
-    form.name.data = artist.name
-    form.genres.data = to_genres_list(artist.genres)
-    form.state.data = artist.state
-    form.city.data = artist.city
-    form.facebook_link.data = artist.facebook_link
-    form.website_link.data = artist.website_link
-    form.image_link.data = artist.image_link
-    form.seeking_venue.data = artist.seeking_venue
-    form.seeking_description.data = artist.seeking_description
+    artist = {}
+    try:
+        artist = Artist.query.filter_by(id=artist_id).first()
+        form.name.data = artist.name
+        form.genres.data = to_genres_list(artist.genres)
+        form.state.data = artist.state
+        form.city.data = artist.city
+        form.facebook_link.data = artist.facebook_link
+        form.website_link.data = artist.website_link
+        form.image_link.data = artist.image_link
+        form.seeking_venue.data = artist.seeking_venue
+        form.seeking_description.data = artist.seeking_description
+    except Exception as err:
+        flash('An error occurred!')
+    finally:
+        db.session.close()
     return render_template('forms/edit_artist.html', form=form, artist=artist)
 
 
