@@ -70,14 +70,14 @@ def index():
 
 @app.route('/venues')
 def venues():
-    # replace with real venues data.
-    #       num_upcoming_shows should be aggregated based on number of upcoming shows per venue.
-
-    data = db.session.query(Venue.id, Venue.name, Venue.city, Venue.state,
-                            db.func.count(Show.id).label('num_upcoming_shows')) \
-        .join(Venue, Venue.id == Show.venue_id) \
-        .filter(Show.start_time > db.func.now()) \
-        .group_by(Venue.id) \
+    venues_list = db.session.execute(f"""
+        SELECT "Venue".id AS "id", "Venue".name AS name, "Venue".city AS city,
+        "Venue".state AS state, count("Show".id) AS num_upcoming_shows FROM "Venue"
+        LEFT JOIN "Show" ON "Venue".id = "Show".venue_id
+        AND "Show".start_time > now() 
+        GROUP BY "Venue".id
+    """)\
+        .mappings()\
         .all()
 
     query = Venue.query \
@@ -86,11 +86,10 @@ def venues():
         .all()
 
     areas_list = list(map(lambda q: q._asdict(), query))
-    venues_list = list(map(lambda d: d._asdict(), data))
     for a in areas_list:
         a['venues'] = []
         for v in venues_list:
-            if a['state'] == v['state']:
+            if a['city'] == v['city']:
                 a['venues'].append(v)
     return render_template('pages/venues.html', areas=areas_list)
 
@@ -98,7 +97,7 @@ def venues():
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
     # implement search on artists with partial string search. Ensure it is case-insensitive.
-    # seach for Hop should return "The Musical Hop".
+    # search for Hop should return "The Musical Hop".
     # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
     search_term = request.form['search_term']
     error = False
@@ -109,7 +108,8 @@ def search_venues():
         data = db.session.execute("""
                  SELECT  "Venue".id, "Venue".name, COUNT("Show".id) as num_upcoming_shows
                  FROM "Venue" 
-                 LEFT OUTER JOIN "Show" ON "Venue".id = "Show".venue_id 
+                 LEFT OUTER JOIN "Show" ON "Venue".id = "Show".venue_id
+                 AND "Show".start_time > now() 
                  WHERE "Venue".name ILIKE :val
                  GROUP BY "Venue".id
 
@@ -127,14 +127,6 @@ def search_venues():
         if error:
             flash('An error occurred!')
             abort(500)
-    # response = {
-    #     "count": 1,
-    #     "data": [{
-    #         "id": 2,
-    #         "name": "The Dueling Pianos Bar",
-    #         "num_upcoming_shows": 0,
-    #     }]
-    # }
     return render_template('pages/search_venues.html', results=response,
                            search_term=request.form.get('search_term', ''))
 
@@ -219,12 +211,22 @@ def create_venue_submission():
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
-    # TODO: Complete this endpoint for taking a venue_id, and using
+    # Complete this endpoint for taking a venue_id, and using
     # SQLAlchemy ORM to delete a record. Handle cases where the session commit could fail.
 
     # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
     # clicking that button delete it from the db then redirect the user to the homepage
-    return None
+    try:
+        Venue.query.filter_by(id=venue_id).delete()
+        db.session.commit()
+        flash('Venue deleted successfully!')
+    except Exception as err:
+        db.session.rollback()
+        flash(str(err))
+        flash('Venue deletion failed!')
+    finally:
+        db.session.close()
+    return render_template('pages/home.html')
 
 
 #  Artists
