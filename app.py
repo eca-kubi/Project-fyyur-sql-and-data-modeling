@@ -490,17 +490,22 @@ def create_artist_submission():
 def shows():
     # displays list of shows at /shows
     # replace with real venues data.
+    data = []
+    try:
 
-    data = db.session.execute(f"""
-        SELECT "Show".id , "Show".venue_id, "Show".artist_id, "Show".start_time, 
-        "Venue".name AS venue_name, "Venue".id AS venue_id, 
-        "Artist".id AS artist_id, "Artist".name AS artist_name, "Artist".image_link AS artist_image_link
-        FROM "Show" 
-        JOIN "Venue" ON "Venue".id = "Show".venue_id 
-        JOIN "Artist" ON "Artist".id = "Show".artist_id
-    """).mappings()\
-        .all()
-
+        data = db.session.execute(f"""
+            SELECT "Show".id , "Show".venue_id, "Show".artist_id, "Show".start_time, 
+            "Venue".name AS venue_name, "Venue".id AS venue_id, 
+            "Artist".id AS artist_id, "Artist".name AS artist_name, "Artist".image_link AS artist_image_link
+            FROM "Show" 
+            JOIN "Venue" ON "Venue".id = "Show".venue_id 
+            JOIN "Artist" ON "Artist".id = "Show".artist_id
+        """).mappings()\
+            .all()
+    except Exception as err:
+        flash('An error occurred!')
+    finally:
+        db.session.close()
     return render_template('pages/shows.html', shows=data)
 
 
