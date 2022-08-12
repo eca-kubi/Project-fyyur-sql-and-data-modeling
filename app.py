@@ -70,43 +70,29 @@ def index():
 
 @app.route('/venues')
 def venues():
-    # TODO: replace with real venues data.
+    # replace with real venues data.
     #       num_upcoming_shows should be aggregated based on number of upcoming shows per venue.
 
-    data = db.session.query(Venue.id, Venue.name, Venue.city, Venue.state, db.func.count(Show.id).label('num_upcoming_shows')) \
+    data = db.session.query(Venue.id, Venue.name, Venue.city, Venue.state,
+                            db.func.count(Show.id).label('num_upcoming_shows')) \
         .join(Venue, Venue.id == Show.venue_id) \
-        .filter(Show.start_time > db.func.now())\
+        .filter(Show.start_time > db.func.now()) \
         .group_by(Venue.id) \
         .all()
 
-    query = db.session.query(Venue.city, Venue.state) \
-        .group_by(Venue.state, Venue.city)\
+    query = Venue.query \
+        .with_entities(Venue.city.label('city'), Venue.state.label('state')) \
+        .group_by(Venue.state, Venue.city) \
         .all()
 
-    flash(str(query[0]._asdict()))
-
-    data = [{
-        "city": "San Francisco",
-        "state": "CA",
-        "venues": [{
-            "id": 1,
-            "name": "The Musical Hop",
-            "num_upcoming_shows": 0,
-        }, {
-            "id": 3,
-            "name": "Park Square Live Music & Coffee",
-            "num_upcoming_shows": 1,
-        }]
-    }, {
-        "city": "New York",
-        "state": "NY",
-        "venues": [{
-            "id": 2,
-            "name": "The Dueling Pianos Bar",
-            "num_upcoming_shows": 0,
-        }]
-    }]
-    return render_template('pages/venues.html', areas=data)
+    areas_list = list(map(lambda q: q._asdict(), query))
+    venues_list = list(map(lambda d: d._asdict(), data))
+    for a in areas_list:
+        a['venues'] = []
+        for v in venues_list:
+            if a['state'] == v['state']:
+                a['venues'].append(v)
+    return render_template('pages/venues.html', areas=areas_list)
 
 
 @app.route('/venues/search', methods=['POST'])
@@ -127,8 +113,8 @@ def search_venues():
                  WHERE "Venue".name ILIKE :val
                  GROUP BY "Venue".id
 
-                """, {'val': '%' + search_term + '%'})\
-            .mappings()\
+                """, {'val': '%' + search_term + '%'}) \
+            .mappings() \
             .all()
         response = {
             "count": len(data),
@@ -264,7 +250,9 @@ def search_artists():
              WHERE "Artist".name ILIKE :val
              GROUP BY "Artist".id
     
-            """, {'val': '%' + search_term + '%'}).mappings().all()
+            """, {'val': '%' + search_term + '%'}) \
+            .mappings() \
+            .all()
         response = {
             "count": len(data),
             "data": data
@@ -478,7 +466,7 @@ def shows():
             FROM "Show" 
             JOIN "Venue" ON "Venue".id = "Show".venue_id 
             JOIN "Artist" ON "Artist".id = "Show".artist_id
-        """).mappings()\
+        """).mappings() \
             .all()
     except Exception as err:
         flash('An error occurred!')
