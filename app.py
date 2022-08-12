@@ -490,9 +490,6 @@ def create_artist_submission():
 def shows():
     # displays list of shows at /shows
     # replace with real venues data.
-    data = Show.query\
-        .join(Venue, Venue.id == Show.venue_id)\
-        .join(Artist, Artist.id == Show.artist_id)
 
     data = db.session.execute(f"""
         SELECT "Show".id , "Show".venue_id, "Show".artist_id, "Show".start_time, 
