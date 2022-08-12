@@ -114,14 +114,41 @@ def search_venues():
     # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
     # seach for Hop should return "The Musical Hop".
     # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
-    response = {
-        "count": 1,
-        "data": [{
-            "id": 2,
-            "name": "The Dueling Pianos Bar",
-            "num_upcoming_shows": 0,
-        }]
-    }
+    search_term = request.form['search_term']
+    error = False
+    response = {}
+    try:
+        # search for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
+        # search for "band" should return "The Wild Sax Band".
+        data = db.session.execute("""
+                 SELECT  "Venue".id, "Venue".name, COUNT("Show".id) as num_upcoming_shows
+                 FROM "Venue" 
+                 LEFT OUTER JOIN "Show" ON "Venue".id = "Show".venue_id 
+                 WHERE "Venue".name ILIKE :val
+                 GROUP BY "Venue".id
+
+                """, {'val': '%' + search_term + '%'})\
+            .mappings()\
+            .all()
+        response = {
+            "count": len(data),
+            "data": data
+        }
+    except Exception as err:
+        error = True
+    finally:
+        db.session.close()
+        if error:
+            flash('An error occurred!')
+            abort(500)
+    # response = {
+    #     "count": 1,
+    #     "data": [{
+    #         "id": 2,
+    #         "name": "The Dueling Pianos Bar",
+    #         "num_upcoming_shows": 0,
+    #     }]
+    # }
     return render_template('pages/search_venues.html', results=response,
                            search_term=request.form.get('search_term', ''))
 
