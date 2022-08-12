@@ -70,27 +70,34 @@ def index():
 
 @app.route('/venues')
 def venues():
-    venues_list = db.session.execute(f"""
-        SELECT "Venue".id AS "id", "Venue".name AS name, "Venue".city AS city,
-        "Venue".state AS state, count("Show".id) AS num_upcoming_shows FROM "Venue"
-        LEFT JOIN "Show" ON "Venue".id = "Show".venue_id
-        AND "Show".start_time > now() 
-        GROUP BY "Venue".id
-    """)\
-        .mappings()\
-        .all()
+    areas_list = []
+    try:
 
-    query = Venue.query \
-        .with_entities(Venue.city.label('city'), Venue.state.label('state')) \
-        .group_by(Venue.state, Venue.city) \
-        .all()
+        venues_list = db.session.execute(f"""
+            SELECT "Venue".id AS "id", "Venue".name AS name, "Venue".city AS city,
+            "Venue".state AS state, count("Show".id) AS num_upcoming_shows FROM "Venue"
+            LEFT JOIN "Show" ON "Venue".id = "Show".venue_id
+            AND "Show".start_time > now() 
+            GROUP BY "Venue".id
+        """)\
+            .mappings()\
+            .all()
 
-    areas_list = list(map(lambda q: q._asdict(), query))
-    for a in areas_list:
-        a['venues'] = []
-        for v in venues_list:
-            if a['city'] == v['city']:
-                a['venues'].append(v)
+        query = Venue.query \
+            .with_entities(Venue.city.label('city'), Venue.state.label('state')) \
+            .group_by(Venue.state, Venue.city) \
+            .all()
+
+        areas_list = list(map(lambda q: q._asdict(), query))
+        for a in areas_list:
+            a['venues'] = []
+            for v in venues_list:
+                if a['city'] == v['city']:
+                    a['venues'].append(v)
+    except Exception as err:
+        flash('An error occurred!')
+    finally:
+        db.session.close()
     return render_template('pages/venues.html', areas=areas_list)
 
 
@@ -296,7 +303,6 @@ def show_artist(artist_id):
     except Exception as err:
         error = True
         flash('An error occurred!')
-        abort(500)
     finally:
         db.session.close()
     return render_template('pages/show_artist.html', artist=artist)
@@ -321,6 +327,7 @@ def edit_artist(artist_id):
         form.seeking_venue.data = artist.seeking_venue
         form.seeking_description.data = artist.seeking_description
     except Exception as err:
+        db.session.rollback()
         flash('An error occurred!')
     finally:
         db.session.close()
@@ -350,7 +357,6 @@ def edit_artist_submission(artist_id):
         except Exception as err:
             flash('Artist edition failed!')
             db.session.rollback()
-            abort(500)
         finally:
             db.session.close()
     else:
@@ -361,18 +367,25 @@ def edit_artist_submission(artist_id):
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
     form = VenueForm()
-    venue = Venue.query.filter_by(id=venue_id).first()
-    form.phone.data = venue.phone
-    form.state.data = venue.state
-    form.city.data = venue.city
-    form.facebook_link.data = venue.facebook_link
-    form.website_link.data = venue.website_link
-    form.name.data = venue.name
-    form.seeking_description.data = venue.seeking_description
-    form.seeking_talent.data = venue.seeking_talent
-    form.image_link.data = venue.image_link
-    form.address.data = venue.address
-    form.genres.data = to_genres_list(venue.genres)
+    venue = []
+    try:
+        venue = Venue.query.filter_by(id=venue_id).first()
+        form.phone.data = venue.phone
+        form.state.data = venue.state
+        form.city.data = venue.city
+        form.facebook_link.data = venue.facebook_link
+        form.website_link.data = venue.website_link
+        form.name.data = venue.name
+        form.seeking_description.data = venue.seeking_description
+        form.seeking_talent.data = venue.seeking_talent
+        form.image_link.data = venue.image_link
+        form.address.data = venue.address
+        form.genres.data = to_genres_list(venue.genres)
+    except Exception as err:
+        db.session.rollback()
+        flash('An error occurred!')
+    finally:
+        db.session.close()
     return render_template('forms/edit_venue.html', form=form, venue=venue)
 
 
@@ -400,7 +413,6 @@ def edit_venue_submission(venue_id):
         except Exception as err:
             flash('Venue edition failed!')
             db.session.rollback()
-            abort(500)
         finally:
             db.session.close()
     else:
@@ -460,7 +472,6 @@ def shows():
     # replace with real venues data.
     data = []
     try:
-
         data = db.session.execute(f"""
             SELECT "Show".id , "Show".venue_id, "Show".artist_id, "Show".start_time, 
             "Venue".name AS venue_name, "Venue".id AS venue_id, 
