@@ -150,12 +150,12 @@ def show_venue(venue_id):
         venue.genres = to_genres_list(venue.genres)
 
         past_shows = db.session.query(Show.start_time, Show.artist_id, Show.id, Show.venue_id, Venue.id, Venue.name,
-                                      Venue.image_link) \
+                                      Venue.image_link, Artist.name.label("artist_name"), Artist.image_link.label("artist_image_link")) \
             .filter(Show.venue_id == venue_id, Show.start_time < func.now()) \
             .join(Venue, Artist)
 
         upcoming_shows = db.session.query(Show.start_time, Show.artist_id, Show.id, Show.venue_id, Venue.id, Venue.name,
-                                          Venue.image_link) \
+                                          Venue.image_link, Artist.name.label("artist_name"), Artist.image_link.label("artist_image_link")) \
             .filter(Show.venue_id == venue_id, Show.start_time > func.now()) \
             .join(Venue, Artist)
         venue.website = venue.website_link
@@ -286,13 +286,13 @@ def show_artist(artist_id):
         artist = Artist.query.filter_by(id=artist_id).one()
         artist.genres = to_genres_list(artist.genres)
 
-        past_shows = db.session.query(Show.start_time, Show.artist_id, Show.id, Show.venue_id, Venue.id, Venue.name,
-                                      Venue.image_link) \
+        past_shows = db.session.query(Show.start_time, Show.artist_id, Show.id, Show.venue_id, Venue.id, Venue.name.label("venue_name"),
+                                      Venue.image_link.label("venue_image_link")) \
             .filter(Show.artist_id == artist_id, Show.start_time < func.now()) \
             .join(Venue, Artist)
 
-        upcoming_shows = db.session.query(Show.start_time, Show.artist_id, Show.id, Show.venue_id, Venue.id, Venue.name,
-                                          Venue.image_link) \
+        upcoming_shows = db.session.query(Show.start_time, Show.artist_id, Show.id, Show.venue_id, Venue.id, Venue.name.label("venue_name"),
+                                          Venue.image_link.label("venue_image_link")) \
             .filter(Show.artist_id == artist_id, Show.start_time > func.now()) \
             .join(Venue, Artist)
 
