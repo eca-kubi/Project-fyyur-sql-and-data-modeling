@@ -57,57 +57,57 @@ def upgrade():
 
     op.execute(f"""
         INSERT INTO "Artist"
-        (id, name, city, state, phone, genres, image_link, facebook_link, website_link, seeking_venue, seeking_description)
-        VALUES(1, 'Eric Clinton', 'Accra', 'AL', '123-456-7890', 'Classical,Alternate,Blues', 
+        (name, city, state, phone, genres, image_link, facebook_link, website_link, seeking_venue, seeking_description)
+        VALUES('Eric Clinton', 'Accra', 'AL', '123-456-7890', 'Classical,Alternate,Blues', 
         'http://pixr.com/ecakubi.jpg', 'http://fb.com/ecakubi', 'http://ecakubi.com', False, '');
 
         INSERT INTO "Artist"
-        (id, name, city, state, phone, genres, image_link, facebook_link, website_link, seeking_venue, seeking_description)
-        VALUES(2, 'John Kurtis', 'Kumasi', 'CA', '234-456-7890', 'Classical,Blues', 
+        (name, city, state, phone, genres, image_link, facebook_link, website_link, seeking_venue, seeking_description)
+        VALUES('John Kurtis', 'Kumasi', 'CA', '234-456-7890', 'Classical,Blues', 
         'http://pixr.com/jkurtis.jpg', 'http://fb.com/jkurtis', 'http://jkurtis.com', True, '');
 
         INSERT INTO "Artist"
-        (id, name, city, state, phone, genres, image_link, facebook_link, website_link, seeking_venue, seeking_description)
-        VALUES(3, 'J Bad Music', 'Takoradi', 'DE', '666-456-7890', 'Funk', 
+        (name, city, state, phone, genres, image_link, facebook_link, website_link, seeking_venue, seeking_description)
+        VALUES('J Bad Music', 'Takoradi', 'DE', '666-456-7890', 'Funk', 
         'http://pixr.com/jbadmusic.jpg', 'http://fb.com/jbadmusic', 'http://jbadmusic.com', False, '');
 
         INSERT INTO "Venue"
-        (id, name, city, state, address, phone, genres, image_link, facebook_link, website_link, seeking_talent, seeking_description)
-        VALUES(1, 'Kumasi Cultural Centre', 'Kumasi', 'CA', '19 Magic Street', '234-456-7890', 'Classical,Alternate,Funk,Blues', 
+        (name, city, state, address, phone, genres, image_link, facebook_link, website_link, seeking_talent, seeking_description)
+        VALUES('Kumasi Cultural Centre', 'Kumasi', 'CA', '19 Magic Street', '234-456-7890', 'Classical,Alternate,Funk,Blues', 
         'http://pixr.com/kcc.jpg', 'http://fb.com/kcc', 'http://kcc.com', True, 'Book our place for shows');
 
         INSERT INTO "Venue"
-        (id, name, city, state, address, phone, genres, image_link, facebook_link, website_link, seeking_talent, seeking_description)
-        VALUES(2, 'Accra Int Conference Centre', 'Accra', 'AL', '34 Champions Street', '666-456-7890', 'Alternate,Blues,Classical,Funk', 
+        (name, city, state, address, phone, genres, image_link, facebook_link, website_link, seeking_talent, seeking_description)
+        VALUES('Accra Int Conference Centre', 'Accra', 'AL', '34 Champions Street', '666-456-7890', 'Alternate,Blues,Classical,Funk', 
         'http://pixr.com/aicc.jpg', 'http://fb.com/aicc', 'http://aicc.com', True, 'Call us now');
 
         INSERT INTO "Show"
-        (id, venue_id, artist_id, start_time)
-        VALUES(1, 1, 1, '2022-08-13T11:00:00.000Z');
+        (venue_id, artist_id, start_time)
+        VALUES(1, 1, '2022-08-13T11:00:00.000Z');
 
         INSERT INTO "Show"
-        (id, venue_id, artist_id, start_time)
-        VALUES(2, 1, 1, '2022-10-01T09:30:00.000Z');
+        (venue_id, artist_id, start_time)
+        VALUES(1, 1, '2022-10-01T09:30:00.000Z');
 
         INSERT INTO "Show"
-        (id, venue_id, artist_id, start_time)
-        VALUES(3, 2, 1, '2022-08-09T7:30:00.000Z');
+        (venue_id, artist_id, start_time)
+        VALUES(2, 1, '2022-08-09T7:30:00.000Z');
 
         INSERT INTO "Show"
-        (id, venue_id, artist_id, start_time)
-        VALUES(4, 1, 2, '2022-11-19T10:00:00.000Z');
+        (venue_id, artist_id, start_time)
+        VALUES(1, 2, '2022-11-19T10:00:00.000Z');
 
         INSERT INTO "Show"
-        (id, venue_id, artist_id, start_time)
-        VALUES(5, 2, 2, '2022-02-01T13:00:00.000Z');
+        (venue_id, artist_id, start_time)
+        VALUES(2, 2, '2022-02-01T13:00:00.000Z');
 
         INSERT INTO "Show"
-        (id, venue_id, artist_id, start_time)
-        VALUES(6, 1, 3, '2022-05-13T11:00:00.000Z');
+        (venue_id, artist_id, start_time)
+        VALUES(1, 3, '2022-05-13T11:00:00.000Z');
 
         INSERT INTO "Show"
-        (id, venue_id, artist_id, start_time)
-        VALUES(7, 2, 3, '2022-10-11T11:00:00.000Z');
+        (venue_id, artist_id, start_time)
+        VALUES(2, 3, '2022-10-11T11:00:00.000Z');
 
 
     """)

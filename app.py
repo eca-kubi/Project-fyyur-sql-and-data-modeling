@@ -518,6 +518,7 @@ def create_show_submission():
             db.session.commit()
         except Exception as err:
             error = True
+            flash(str(err))
             db.session.rollback()
         finally:
             db.session.close()
