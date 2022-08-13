@@ -8,11 +8,11 @@ import babel
 import dateutil.parser
 import logging
 from flask import Flask, render_template, request, flash, redirect, url_for, abort
+from flask_migrate import Migrate
 from flask_moment import Moment
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
-
 from forms import *
+from models import Venue, Show, Artist, db
 
 # ----------------------------------------------------------------------------#
 # App Config.
@@ -21,11 +21,9 @@ from forms import *
 app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
-db = SQLAlchemy(app, session_options={
-    'expire_on_commit': False
-})
 
-from models import Venue, Show, Artist
+db.init_app(app)
+migrate = Migrate(app, db)
 
 
 # ----------------------------------------------------------------------------#
@@ -79,8 +77,8 @@ def venues():
             LEFT JOIN "Show" ON "Venue".id = "Show".venue_id
             AND "Show".start_time > now() 
             GROUP BY "Venue".id
-        """)\
-            .mappings()\
+        """) \
+            .mappings() \
             .all()
 
         query = Venue.query \
@@ -150,12 +148,14 @@ def show_venue(venue_id):
         venue.genres = to_genres_list(venue.genres)
 
         past_shows = db.session.query(Show.start_time, Show.artist_id, Show.id, Show.venue_id, Venue.id, Venue.name,
-                                      Venue.image_link, Artist.name.label("artist_name"), Artist.image_link.label("artist_image_link")) \
+                                      Venue.image_link, Artist.name.label("artist_name"),
+                                      Artist.image_link.label("artist_image_link")) \
             .filter(Show.venue_id == venue_id, Show.start_time < func.now()) \
             .join(Venue, Artist)
 
         upcoming_shows = db.session.query(Show.start_time, Show.artist_id, Show.id, Show.venue_id, Venue.id, Venue.name,
-                                          Venue.image_link, Artist.name.label("artist_name"), Artist.image_link.label("artist_image_link")) \
+                                          Venue.image_link, Artist.name.label("artist_name"),
+                                          Artist.image_link.label("artist_image_link")) \
             .filter(Show.venue_id == venue_id, Show.start_time > func.now()) \
             .join(Venue, Artist)
         venue.website = venue.website_link
@@ -286,12 +286,14 @@ def show_artist(artist_id):
         artist = Artist.query.filter_by(id=artist_id).one()
         artist.genres = to_genres_list(artist.genres)
 
-        past_shows = db.session.query(Show.start_time, Show.artist_id, Show.id, Show.venue_id, Venue.id, Venue.name.label("venue_name"),
+        past_shows = db.session.query(Show.start_time, Show.artist_id, Show.id, Show.venue_id, Venue.id,
+                                      Venue.name.label("venue_name"),
                                       Venue.image_link.label("venue_image_link")) \
             .filter(Show.artist_id == artist_id, Show.start_time < func.now()) \
             .join(Venue, Artist)
 
-        upcoming_shows = db.session.query(Show.start_time, Show.artist_id, Show.id, Show.venue_id, Venue.id, Venue.name.label("venue_name"),
+        upcoming_shows = db.session.query(Show.start_time, Show.artist_id, Show.id, Show.venue_id, Venue.id,
+                                          Venue.name.label("venue_name"),
                                           Venue.image_link.label("venue_image_link")) \
             .filter(Show.artist_id == artist_id, Show.start_time > func.now()) \
             .join(Venue, Artist)

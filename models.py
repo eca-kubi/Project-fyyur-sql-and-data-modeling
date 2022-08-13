@@ -1,11 +1,15 @@
 # ----------------------------------------------------------------------------#
+# Imports
+# ----------------------------------------------------------------------------#
+from flask_sqlalchemy import SQLAlchemy
+
+
+# ----------------------------------------------------------------------------#
 # Models.
 # ----------------------------------------------------------------------------#
-from flask_migrate import Migrate
-
-from app import db, app
-
-migrate = Migrate(app, db)
+db = SQLAlchemy(session_options={
+    'expire_on_commit': False
+})
 
 
 class Venue(db.Model):
@@ -21,7 +25,7 @@ class Venue(db.Model):
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
     website_link = db.Column(db.String(120))
-    seeking_talent = db.Column(db.Boolean,  nullable=True, default=False)
+    seeking_talent = db.Column(db.Boolean, nullable=True, default=False)
     seeking_description = db.Column(db.String, nullable=True, default="We are currently searching for local artists "
                                                                       "to play shows.")
     shows = db.relationship('Show', backref='venue', cascade="all, delete", lazy=True)
